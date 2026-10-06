@@ -199,25 +199,36 @@ END IF;
 <th>Prompt</th>
 <th>Value Set</th>
 <th>Required</th>
+<th>Range</th>
+<th>Display Size</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>現有最大值之後</td>
+<td>60</td>
 <td>P_FG_EMS_G_NO_S</td>
 <td>成品序號(起)</td>
-<td>數字型（待確認，例如 <code>FND_NUMBER</code>）</td>
+<td><code>FND_NUMBER</code></td>
 <td>No</td>
+<td>Low</td>
+<td>15</td>
 </tr>
 <tr>
-<td>再下一個</td>
+<td>70</td>
 <td>P_FG_EMS_G_NO_E</td>
 <td>成品序號(迄)</td>
-<td>數字型（待確認）</td>
+<td><code>FND_NUMBER</code></td>
 <td>No</td>
+<td>High</td>
+<td>15</td>
 </tr>
 </tbody>
 </table></div>
+<ul>
+<li><code>FND_NUMBER</code> 在本環境的設定（已查核 <code>FND_FLEX_VALUE_SETS</code>）：Format Type Number、Maximum Size 15、Precision 0、Min Value 0、Validation Type None。也就是只允許 0 以上的整數，符合「成品序號為整數」的需求。</li>
+<li>Range 設 Low／High：兩個都有輸入且迄小於起時，在參數畫面按 OK 就會被擋下。程式內的起迄檢核保留，用來處理不經參數畫面送出的情況。</li>
+<li>Default Type 空白、Enable Security 不勾，Token 不用填。</li>
+</ul>
 <blockquote class="warning">
 <p><strong>Warning</strong>：參數 Sequence 必須排在「報表格式:成品或料件」之後，因為程式是照順序傳參數。順序錯誤會造成參數錯位，或發生 <code>PLS-00306</code>。</p>
 </blockquote>

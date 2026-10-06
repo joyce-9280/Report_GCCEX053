@@ -145,7 +145,10 @@ blockquote.meta{border-color:#8a94a3;color:#555}
 <h2 id="5">5. 後續待辦與風險</h2>
 <ul>
 <li>&#9744; 在 DEV 編譯 <code>.pks</code>／<code>.pkb</code>，確認 <code>USER_OBJECTS.STATUS = 'VALID'</code>。</li>
-<li>&#9744; Concurrent Program 新增兩個參數（Value Set 名稱待確認，建議數字型，例如 <code>FND_NUMBER</code>）。</li>
+<li>&#9744; Concurrent Program 新增兩個參數：Seq 60／70，Value Set <code>FND_NUMBER</code>，Range Low／High，Display Size 15。<ul>
+<li>已確認：本環境 <code>FND_NUMBER</code> 為 Precision 0、Min Value 0、Maximum Size 15，只允許 0 以上的整數。</li>
+</ul>
+</li>
 <li>&#9744; 待確認：<code>FG_EMS_G_NO</code> 是否有前置零或非數字資料，可用下方 SQL 查核。</li>
 <li>&#9744; 待確認：資料庫版本。</li>
 <li>風險：如果有輸入序號範圍，<code>FG_EMS_G_NO</code> 為非數字的料件不會出現在報表中。</li>

@@ -89,10 +89,14 @@ END IF;
 - Package 仍在 `APPS` 底下，沒有新增 Table 或 View，不需要額外授權。
 - Concurrent Program 參數（System Administrator → Concurrent → Program → Define → Parameters）：
 
-| Seq | Parameter | Prompt | Value Set | Required |
-|---|---|---|---|---|
-| 現有最大值之後 | P_FG_EMS_G_NO_S | 成品序號(起) | 數字型（待確認，例如 `FND_NUMBER`） | No |
-| 再下一個 | P_FG_EMS_G_NO_E | 成品序號(迄) | 數字型（待確認） | No |
+| Seq | Parameter | Prompt | Value Set | Required | Range | Display Size |
+|---|---|---|---|---|---|---|
+| 60 | P_FG_EMS_G_NO_S | 成品序號(起) | `FND_NUMBER` | No | Low | 15 |
+| 70 | P_FG_EMS_G_NO_E | 成品序號(迄) | `FND_NUMBER` | No | High | 15 |
+
+- `FND_NUMBER` 在本環境的設定（已查核 `FND_FLEX_VALUE_SETS`）：Format Type Number、Maximum Size 15、Precision 0、Min Value 0、Validation Type None。也就是只允許 0 以上的整數，符合「成品序號為整數」的需求。
+- Range 設 Low／High：兩個都有輸入且迄小於起時，在參數畫面按 OK 就會被擋下。程式內的起迄檢核保留，用來處理不經參數畫面送出的情況。
+- Default Type 空白、Enable Security 不勾，Token 不用填。
 
 > **Warning**：參數 Sequence 必須排在「報表格式:成品或料件」之後，因為程式是照順序傳參數。順序錯誤會造成參數錯位，或發生 `PLS-00306`。
 
