@@ -120,8 +120,9 @@ IS
         WHERE FHI.COP_EMS_NO= NVL(P_COP_EMS_NO, FHI.COP_EMS_NO)
         AND FHI.imp_contract_no= NVL(P_IMP_CONTRACT_NO, FHI.imp_contract_no)      
         AND FHI.INVENTORY_ITEM_ID=NVL(P_ITEM_ID, FHI.INVENTORY_ITEM_ID)
-        AND (P_FG_EMS_G_NO_S IS NULL OR FHI.FG_EMS_G_NO >= P_FG_EMS_G_NO_S) --成品序號(起) 2026/10/06 add
-        AND (P_FG_EMS_G_NO_E IS NULL OR FHI.FG_EMS_G_NO <= P_FG_EMS_G_NO_E) --成品序號(迄) 2026/10/06 add
+        --FG_EMS_G_NO 為 VARCHAR2，轉數字比較，非數字值視為 NULL 以免 ORA-01722
+        AND (P_FG_EMS_G_NO_S IS NULL OR TO_NUMBER(CASE WHEN REGEXP_LIKE(TRIM(FHI.FG_EMS_G_NO), '^[0-9]+$') THEN TRIM(FHI.FG_EMS_G_NO) END) >= P_FG_EMS_G_NO_S) --成品序號(起) 2026/10/06 add
+        AND (P_FG_EMS_G_NO_E IS NULL OR TO_NUMBER(CASE WHEN REGEXP_LIKE(TRIM(FHI.FG_EMS_G_NO), '^[0-9]+$') THEN TRIM(FHI.FG_EMS_G_NO) END) <= P_FG_EMS_G_NO_E) --成品序號(迄) 2026/10/06 add
         order by FHI.imp_contract_no;
        /* group   BY FHI.IMP_CONTRACT_NO,
           FHI.COP_EMS_NO,
