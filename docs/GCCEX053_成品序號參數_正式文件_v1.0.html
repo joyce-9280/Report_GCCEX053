@@ -44,6 +44,7 @@ pre{white-space:pre-wrap;word-break:break-all;background:#f4f4f4;color:#000;bord
 <li><a href="#41">4.1 欄位對應</a></li>
 <li><a href="#42-hz_exg">4.2 成品明細條件（HZ_EXG）</a></li>
 <li><a href="#43-hz_img">4.3 料件明細條件（HZ_IMG）</a></li>
+<li><a href="#44">4.4 起迄檢核</a></li>
 </ul>
 </li>
 <li><a href="#5">5. 權限與相依設定</a></li>
@@ -99,6 +100,7 @@ pre{white-space:pre-wrap;word-break:break-all;background:#f4f4f4;color:#000;bord
 </table></div>
 <ul>
 <li>參數留空代表那一邊不限制。</li>
+<li>兩個都有輸入時，成品序號(起)不可大於成品序號(迄)，否則報表以錯誤結束。</li>
 <li>原有參數與輸出欄位都不變。</li>
 </ul>
 <h2 id="3">3. 影響範圍與物件清單</h2>
@@ -119,7 +121,7 @@ pre{white-space:pre-wrap;word-break:break-all;background:#f4f4f4;color:#000;bord
 <tr>
 <td><code>APPS.GCCEX053_PKG</code>（<code>GCCEX053_PKG.pkb</code>）</td>
 <td>Package Body</td>
-<td>新增參數，並在 <code>HZ_EXG</code>、<code>HZ_IMG</code> cursor 加篩選條件</td>
+<td>新增參數、起迄檢核，並在 <code>HZ_EXG</code>、<code>HZ_IMG</code> cursor 加篩選條件</td>
 </tr>
 <tr>
 <td>GCCEX053</td>
@@ -168,6 +170,22 @@ AND (P_FG_EMS_G_NO_E IS NULL OR
 <blockquote class="note">
 <p><strong>Note</strong>：有輸入序號範圍時，<code>FG_EMS_G_NO</code> 為非數字或空值的料件不會出現在報表中；沒輸入範圍時照常全部列出。</p>
 </blockquote>
+<h3 id="44">4.4 起迄檢核</h3>
+<p><code>MAIN</code> 一開始先檢查：兩個參數都有輸入，且起大於迄時，不產生報表資料，直接結束。</p>
+<div class="code"><button class="copy" type="button">複製</button><pre><code class="language-sql">IF P_FG_EMS_G_NO_S IS NOT NULL AND P_FG_EMS_G_NO_E IS NOT NULL
+   AND P_FG_EMS_G_NO_S &gt; P_FG_EMS_G_NO_E THEN
+   ERRBUF  := '成品序號(起) ' || P_FG_EMS_G_NO_S || ' 不可大於成品序號(迄) ' || P_FG_EMS_G_NO_E;
+   RETCODE := 2;
+   FND_FILE.PUT_LINE(FND_FILE.LOG, ERRBUF);
+   FND_FILE.PUT_LINE(FND_FILE.OUTPUT, ERRBUF);
+   RETURN;
+END IF;
+</code></pre></div>
+<ul>
+<li><code>RETCODE := 2</code>：Concurrent Request 狀態為 <strong>Error</strong>，Completion Text 顯示錯誤訊息。</li>
+<li>錯誤訊息同時寫入 Log 和 Output，使用者直接看 Output 也能知道原因。</li>
+<li>只有一邊有輸入時不檢核。</li>
+</ul>
 <h2 id="5">5. 權限與相依設定</h2>
 <ul>
 <li>Package 仍在 <code>APPS</code> 底下，沒有新增 Table 或 View，不需要額外授權。</li>
@@ -314,6 +332,13 @@ AND (P_FG_EMS_G_NO_E IS NULL OR
 <td>10</td>
 <td>包含成品序號 10 的料件（確認不是文字排序）</td>
 </tr>
+<tr>
+<td>7</td>
+<td>成品或料件</td>
+<td>10</td>
+<td>5</td>
+<td>Request 狀態為 Error，Log 和 Output 顯示「成品序號(起) 10 不可大於成品序號(迄) 5」</td>
+</tr>
 </tbody>
 </table></div>
 <h2 id="8-rollback-plan">8. Rollback Plan</h2>
@@ -343,9 +368,14 @@ AND (P_FG_EMS_G_NO_E IS NULL OR
 <td>執行附錄 10.3</td>
 </tr>
 <tr>
+<td>Request 狀態為 Error，訊息為「成品序號(起) … 不可大於成品序號(迄) …」</td>
+<td>起大於迄</td>
+<td>重新輸入正確範圍</td>
+</tr>
+<tr>
 <td>報表沒有任何資料</td>
-<td>序號(起) 大於 序號(迄)</td>
-<td>檢查輸入值</td>
+<td>該範圍內沒有對應的成品序號</td>
+<td>確認合同號與序號範圍</td>
 </tr>
 </tbody>
 </table></div>

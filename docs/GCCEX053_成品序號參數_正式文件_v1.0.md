@@ -21,6 +21,7 @@
 | 成品序號(迄) | `P_FG_EMS_G_NO_E` | NUMBER | 否 |
 
 - 參數留空代表那一邊不限制。
+- 兩個都有輸入時，成品序號(起)不可大於成品序號(迄)，否則報表以錯誤結束。
 - 原有參數與輸出欄位都不變。
 
 ## 3. 影響範圍與物件清單
@@ -28,7 +29,7 @@
 | 物件 | 類型 | 異動 |
 |---|---|---|
 | `APPS.GCCEX053_PKG`（`GCCEX053_PKG.pks`） | Package Spec | `MAIN` 新增 2 個參數 |
-| `APPS.GCCEX053_PKG`（`GCCEX053_PKG.pkb`） | Package Body | 新增參數，並在 `HZ_EXG`、`HZ_IMG` cursor 加篩選條件 |
+| `APPS.GCCEX053_PKG`（`GCCEX053_PKG.pkb`） | Package Body | 新增參數、起迄檢核，並在 `HZ_EXG`、`HZ_IMG` cursor 加篩選條件 |
 | GCCEX053 | Concurrent Program | 新增 2 個參數定義 |
 
 原始檔為 Big5 編碼、CRLF 換行，部署時請維持相同編碼，避免中文註解變成亂碼。
@@ -63,6 +64,25 @@ AND (P_FG_EMS_G_NO_E IS NULL OR
 ```
 
 > **Note**：有輸入序號範圍時，`FG_EMS_G_NO` 為非數字或空值的料件不會出現在報表中；沒輸入範圍時照常全部列出。
+
+### 4.4 起迄檢核
+
+`MAIN` 一開始先檢查：兩個參數都有輸入，且起大於迄時，不產生報表資料，直接結束。
+
+```sql
+IF P_FG_EMS_G_NO_S IS NOT NULL AND P_FG_EMS_G_NO_E IS NOT NULL
+   AND P_FG_EMS_G_NO_S > P_FG_EMS_G_NO_E THEN
+   ERRBUF  := '成品序號(起) ' || P_FG_EMS_G_NO_S || ' 不可大於成品序號(迄) ' || P_FG_EMS_G_NO_E;
+   RETCODE := 2;
+   FND_FILE.PUT_LINE(FND_FILE.LOG, ERRBUF);
+   FND_FILE.PUT_LINE(FND_FILE.OUTPUT, ERRBUF);
+   RETURN;
+END IF;
+```
+
+- `RETCODE := 2`：Concurrent Request 狀態為 **Error**，Completion Text 顯示錯誤訊息。
+- 錯誤訊息同時寫入 Log 和 Output，使用者直接看 Output 也能知道原因。
+- 只有一邊有輸入時不檢核。
 
 ## 5. 權限與相依設定
 
@@ -99,6 +119,7 @@ AND (P_FG_EMS_G_NO_E IS NULL OR
 | 4 | 料件 | 空 | 空 | 與修改前相同 |
 | 5 | 料件 | 2 | 2 | 只列出成品序號 2 的料件 |
 | 6 | 料件 | 1 | 10 | 包含成品序號 10 的料件（確認不是文字排序） |
+| 7 | 成品或料件 | 10 | 5 | Request 狀態為 Error，Log 和 Output 顯示「成品序號(起) 10 不可大於成品序號(迄) 5」 |
 
 ## 8. Rollback Plan
 
@@ -112,7 +133,8 @@ AND (P_FG_EMS_G_NO_E IS NULL OR
 |---|---|---|
 | 送出報表時發生 `PLS-00306` | 參數數量或順序和 Package 不一致 | 核對 Concurrent Program 參數 Seq |
 | 料件報表少了部分資料 | `FG_EMS_G_NO` 有非數字值 | 執行附錄 10.3 |
-| 報表沒有任何資料 | 序號(起) 大於 序號(迄) | 檢查輸入值 |
+| Request 狀態為 Error，訊息為「成品序號(起) … 不可大於成品序號(迄) …」 | 起大於迄 | 重新輸入正確範圍 |
+| 報表沒有任何資料 | 該範圍內沒有對應的成品序號 | 確認合同號與序號範圍 |
 
 ## 10. 附錄：SQL Scripts
 

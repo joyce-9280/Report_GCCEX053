@@ -174,6 +174,16 @@ IS
 
 
         BEGIN
+          --¦¨«~§Ç¸¹(°_)¤£¥i¤j©ó¦¨«~§Ç¸¹(¨´) 2026/10/06 add
+          IF P_FG_EMS_G_NO_S IS NOT NULL AND P_FG_EMS_G_NO_E IS NOT NULL
+             AND P_FG_EMS_G_NO_S > P_FG_EMS_G_NO_E THEN
+             ERRBUF  := '¦¨«~§Ç¸¹(°_) ' || P_FG_EMS_G_NO_S || ' ¤£¥i¤j©ó¦¨«~§Ç¸¹(¨´) ' || P_FG_EMS_G_NO_E;
+             RETCODE := 2;
+             FND_FILE.PUT_LINE(FND_FILE.LOG, ERRBUF);
+             FND_FILE.PUT_LINE(FND_FILE.OUTPUT, ERRBUF);
+             RETURN;
+          END IF;
+
           IF P_G_MARK = '4'                                               -- ¦¨«~
           THEN
 

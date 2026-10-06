@@ -92,6 +92,13 @@ blockquote.meta{border-color:#8a94a3;color:#555}
 <li>最終解法：先用 <code>REGEXP_LIKE</code> 確認是純數字再轉換，非數字視為 NULL。</li>
 <li>修改物件：<code>GCCEX053_PKG.pkb</code>。</li>
 </ul>
+<h3 id="2026-10-06_2">2026-10-06｜成品序號起迄檢核</h3>
+<ul>
+<li>需求：成品序號(起)不可大於成品序號(迄)。</li>
+<li>做法：<code>MAIN</code> 開頭檢核，起大於迄時設定 <code>ERRBUF</code>、<code>RETCODE := 2</code>，寫入 Log 和 Output 後 <code>RETURN</code>。</li>
+<li>未採用的方法：在 Value Set 做跨參數檢核（需要表格型 Value Set 搭配 <code>$FLEX$</code>，設定較複雜，也較難維護）。</li>
+<li>修改物件：<code>GCCEX053_PKG.pkb</code>。</li>
+</ul>
 <h2 id="3">3. 變更紀錄</h2>
 <div class="tbl"><table>
 <thead>
@@ -121,11 +128,18 @@ blockquote.meta{border-color:#8a94a3;color:#555}
 <td><code>HZ_IMG</code> 依 <code>FHI.FG_EMS_G_NO</code> 安全轉數字後篩選</td>
 <td>待編譯／待測</td>
 </tr>
+<tr>
+<td>2026-10-06</td>
+<td>GCCEX053_PKG.pkb</td>
+<td>新增起迄檢核，起大於迄時 Request 以 Error 結束</td>
+<td>待編譯／待測</td>
+</tr>
 </tbody>
 </table></div>
 <h2 id="4">4. 最終設定摘要</h2>
 <ul>
 <li>參數留空代表那一邊不限制。</li>
+<li>兩個都有輸入且起大於迄時，Request 以 Error 結束，不產生報表資料。</li>
 <li>新參數一定要排在 <code>P_G_MARK</code> 之後，Concurrent Program 參數的 Sequence 也要排在最後。</li>
 </ul>
 <h2 id="5">5. 後續待辦與風險</h2>
