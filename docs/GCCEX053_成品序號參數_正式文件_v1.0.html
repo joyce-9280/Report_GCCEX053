@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GCCEX053 合同BOM(成品/料件)明細表：新增成品序號參數 正式文件</title><style>
+*{box-sizing:border-box}
+body{margin:0;font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif;font-size:15px;line-height:1.7;color:var(--text);background:var(--bg)}
+code{font-family:Consolas,"Courier New",monospace;font-size:.9em;background:var(--codebg);padding:1px 5px;border-radius:3px}
+.code{position:relative;margin:12px 0}
+pre{background:#1e2733;color:#e6edf3;padding:14px 16px;border-radius:6px;overflow-x:auto;margin:0}
+pre code{background:none;padding:0;color:inherit;font-size:13px}
+.copy{position:absolute;top:6px;right:6px;font-size:12px;padding:3px 10px;border:1px solid #6b7a8c;background:#2c3846;color:#e6edf3;border-radius:4px;cursor:pointer}
+.tbl{overflow-x:auto;margin:12px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:var(--th);color:var(--thtext);font-weight:600}
+tr:nth-child(even) td{background:var(--zebra)}
+blockquote{margin:14px 0;padding:10px 14px;border-left:4px solid var(--line);background:var(--zebra);border-radius:0 6px 6px 0}
+blockquote p{margin:4px 0}
+blockquote.warning{border-color:#c0392b;background:#fdecea}
+blockquote.note{border-color:#2f6db5;background:#eaf2fb}
+
+:root{--bg:#f4f6f9;--text:#1f2937;--navy:#14325c;--gold:#c9a227;--line:#c9d2de;--th:#14325c;--thtext:#fff;--zebra:#f2f5f9;--codebg:#e8edf3}
+.layout{display:flex;min-height:100vh}
+nav.side{position:fixed;top:0;left:0;bottom:0;width:270px;background:var(--navy);color:#dbe4f0;overflow-y:auto;padding:22px 16px}
+nav.side .brand{font-weight:700;color:#fff;font-size:15px;border-bottom:2px solid var(--gold);padding-bottom:10px;margin-bottom:12px}
+nav.side ul{list-style:none;padding-left:0;margin:0}
+nav.side ul ul{padding-left:14px}
+nav.side a{display:block;color:#dbe4f0;text-decoration:none;padding:4px 6px;border-radius:4px;font-size:14px}
+nav.side a:hover{background:rgba(255,255,255,.1);color:#fff}
+main{margin-left:270px;flex:1;padding:36px 48px;max-width:1100px;background:#fff;min-height:100vh}
+h1{color:var(--navy);font-size:26px;margin-top:0;padding-bottom:12px;border-bottom:3px solid var(--gold)}
+h2{color:var(--navy);font-size:20px;margin-top:36px;padding-left:10px;border-left:5px solid var(--gold)}
+h3{color:var(--navy);font-size:17px}
+blockquote.meta{border-color:var(--navy);background:#eef2f8}
+@media (max-width:800px){nav.side{position:static;width:auto}.layout{display:block}main{margin-left:0;padding:20px 16px}}
+@media print{@page{size:A4;margin:18mm 15mm}nav.side,.copy{display:none}main{margin:0;padding:0;max-width:none}body{background:#fff;font-size:11pt}
+pre{white-space:pre-wrap;word-break:break-all;background:#f4f4f4;color:#000;border:1px solid #ccc}h2{page-break-after:avoid}table,.code{page-break-inside:avoid}th{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head>
+<body><div class="layout"><nav class="side"><div class="brand">GCCEX053 成品序號參數</div><div class="toc">
+<ul>
+<li><a href="#1">1. 系統概述</a></li>
+<li><a href="#2">2. 需求範圍與設計摘要</a></li>
+<li><a href="#3">3. 影響範圍與物件清單</a></li>
+<li><a href="#4">4. 設計細節</a><ul>
+<li><a href="#41">4.1 欄位對應</a></li>
+<li><a href="#42-hz_exg">4.2 成品明細條件（HZ_EXG）</a></li>
+<li><a href="#43-hz_img">4.3 料件明細條件（HZ_IMG）</a></li>
+</ul>
+</li>
+<li><a href="#5">5. 權限與相依設定</a></li>
+<li><a href="#6">6. 部署步驟</a></li>
+<li><a href="#7-uat">7. UAT 與上線後驗證</a></li>
+<li><a href="#8-rollback-plan">8. Rollback Plan</a></li>
+<li><a href="#9">9. 常見問題與維運排查</a></li>
+<li><a href="#10-sql-scripts">10. 附錄：SQL Scripts</a><ul>
+<li><a href="#101">10.1 備份現有原始碼（唯讀）</a></li>
+<li><a href="#102">10.2 確認編譯狀態（唯讀）</a></li>
+<li><a href="#103-fg_ems_g_no">10.3 查 FG_EMS_G_NO 非數字資料（唯讀）</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</nav><main><h1 id="gccex053-bom">GCCEX053 合同BOM(成品/料件)明細表：新增成品序號參數 正式文件</h1>
+<blockquote class="meta">
+<p>文件版本：v1.0<br />
+最後更新：2026-10-06<br />
+文件狀態：Draft（尚未編譯與測試）</p>
+</blockquote>
+<h2 id="1">1. 系統概述</h2>
+<p><code>GCCEX053:合同BOM(成品/料件)明細表</code> 是 EBS Concurrent Program，由 <code>APPS.GCCEX053_PKG.MAIN</code> 產生以 <code>|</code> 分隔的文字輸出。報表格式分兩種：</p>
+<ul>
+<li><code>P_G_MARK = '4'</code>：成品明細，資料來源 <code>FL_GCC_HZ_EXG_ITEM</code></li>
+<li><code>P_G_MARK = '3'</code>：料件明細，資料來源 <code>FL_GCC_HZ_IMG_ITEM</code></li>
+</ul>
+<h2 id="2">2. 需求範圍與設計摘要</h2>
+<p>新增兩個查詢參數，可依成品序號範圍篩選報表：</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>參數畫面名稱</th>
+<th>程式參數</th>
+<th>型態</th>
+<th>必填</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>成品序號(起)</td>
+<td><code>P_FG_EMS_G_NO_S</code></td>
+<td>NUMBER</td>
+<td>否</td>
+</tr>
+<tr>
+<td>成品序號(迄)</td>
+<td><code>P_FG_EMS_G_NO_E</code></td>
+<td>NUMBER</td>
+<td>否</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>參數留空代表那一邊不限制。</li>
+<li>原有參數與輸出欄位都不變。</li>
+</ul>
+<h2 id="3">3. 影響範圍與物件清單</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>物件</th>
+<th>類型</th>
+<th>異動</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>APPS.GCCEX053_PKG</code>（<code>GCCEX053_PKG.pks</code>）</td>
+<td>Package Spec</td>
+<td><code>MAIN</code> 新增 2 個參數</td>
+</tr>
+<tr>
+<td><code>APPS.GCCEX053_PKG</code>（<code>GCCEX053_PKG.pkb</code>）</td>
+<td>Package Body</td>
+<td>新增參數，並在 <code>HZ_EXG</code>、<code>HZ_IMG</code> cursor 加篩選條件</td>
+</tr>
+<tr>
+<td>GCCEX053</td>
+<td>Concurrent Program</td>
+<td>新增 2 個參數定義</td>
+</tr>
+</tbody>
+</table></div>
+<p>原始檔為 Big5 編碼、CRLF 換行，部署時請維持相同編碼，避免中文註解變成亂碼。</p>
+<h2 id="4">4. 設計細節</h2>
+<h3 id="41">4.1 欄位對應</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>報表格式</th>
+<th>篩選欄位</th>
+<th>欄位型態</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>成品（4）</td>
+<td><code>FL_GCC_HZ_EXG_ITEM.EMS_G_NO</code></td>
+<td>NUMBER(19,0)</td>
+</tr>
+<tr>
+<td>料件（3）</td>
+<td><code>FL_GCC_HZ_IMG_ITEM.FG_EMS_G_NO</code></td>
+<td>VARCHAR2(20)</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="42-hz_exg">4.2 成品明細條件（HZ_EXG）</h3>
+<div class="code"><button class="copy" type="button">複製</button><pre><code class="language-sql">AND (P_FG_EMS_G_NO_S IS NULL OR FHE.EMS_G_NO &gt;= P_FG_EMS_G_NO_S)
+AND (P_FG_EMS_G_NO_E IS NULL OR FHE.EMS_G_NO &lt;= P_FG_EMS_G_NO_E)
+</code></pre></div>
+<h3 id="43-hz_img">4.3 料件明細條件（HZ_IMG）</h3>
+<p><code>FG_EMS_G_NO</code> 是文字欄位，先確認是純數字再轉換，其他值視為 NULL。這樣可以避免 ORA-01722，也能用數字順序比較（1, 2, …, 10）。</p>
+<div class="code"><button class="copy" type="button">複製</button><pre><code class="language-sql">AND (P_FG_EMS_G_NO_S IS NULL OR
+     TO_NUMBER(CASE WHEN REGEXP_LIKE(TRIM(FHI.FG_EMS_G_NO), '^[0-9]+$')
+                    THEN TRIM(FHI.FG_EMS_G_NO) END) &gt;= P_FG_EMS_G_NO_S)
+AND (P_FG_EMS_G_NO_E IS NULL OR
+     TO_NUMBER(CASE WHEN REGEXP_LIKE(TRIM(FHI.FG_EMS_G_NO), '^[0-9]+$')
+                    THEN TRIM(FHI.FG_EMS_G_NO) END) &lt;= P_FG_EMS_G_NO_E)
+</code></pre></div>
+<blockquote class="note">
+<p><strong>Note</strong>：有輸入序號範圍時，<code>FG_EMS_G_NO</code> 為非數字或空值的料件不會出現在報表中；沒輸入範圍時照常全部列出。</p>
+</blockquote>
+<h2 id="5">5. 權限與相依設定</h2>
+<ul>
+<li>Package 仍在 <code>APPS</code> 底下，沒有新增 Table 或 View，不需要額外授權。</li>
+<li>Concurrent Program 參數（System Administrator → Concurrent → Program → Define → Parameters）：</li>
+</ul>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Seq</th>
+<th>Parameter</th>
+<th>Prompt</th>
+<th>Value Set</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>現有最大值之後</td>
+<td>P_FG_EMS_G_NO_S</td>
+<td>成品序號(起)</td>
+<td>數字型（待確認，例如 <code>FND_NUMBER</code>）</td>
+<td>No</td>
+</tr>
+<tr>
+<td>再下一個</td>
+<td>P_FG_EMS_G_NO_E</td>
+<td>成品序號(迄)</td>
+<td>數字型（待確認）</td>
+<td>No</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote class="warning">
+<p><strong>Warning</strong>：參數 Sequence 必須排在「報表格式:成品或料件」之後，因為程式是照順序傳參數。順序錯誤會造成參數錯位，或發生 <code>PLS-00306</code>。</p>
+</blockquote>
+<h2 id="6">6. 部署步驟</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>步驟</th>
+<th>執行者</th>
+<th>動作</th>
+<th>成功判斷</th>
+<th>失敗處置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>DBA／開發</td>
+<td>備份正式區現有 <code>GCCEX053_PKG</code> 原始碼（見附錄 10.1）</td>
+<td>取得 spec 與 body 原始碼</td>
+<td>停止部署</td>
+</tr>
+<tr>
+<td>2</td>
+<td>DBA／開發</td>
+<td>以 APPS 編譯 <code>GCCEX053_PKG.pks</code></td>
+<td>無編譯錯誤</td>
+<td>查 <code>USER_ERRORS</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>DBA／開發</td>
+<td>以 APPS 編譯 <code>GCCEX053_PKG.pkb</code></td>
+<td>無編譯錯誤</td>
+<td>查 <code>USER_ERRORS</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>DBA／開發</td>
+<td>確認物件狀態（見附錄 10.2）</td>
+<td>兩筆都是 <code>VALID</code></td>
+<td>重新編譯或 rollback</td>
+</tr>
+<tr>
+<td>5</td>
+<td>EBS 系統管理員</td>
+<td>Concurrent Program 新增兩個參數（見第 5 節）</td>
+<td>參數畫面出現兩個新欄位</td>
+<td>檢查 Seq 與 Value Set</td>
+</tr>
+<tr>
+<td>6</td>
+<td>使用者</td>
+<td>執行第 7 節驗證</td>
+<td>結果符合預期</td>
+<td>依第 8 節 rollback</td>
+</tr>
+</tbody>
+</table></div>
+<p>步驟 2 到 5 之間，舊的參數定義和新的 Package 不一致，送出報表會失敗，請在離峰時段一次完成。</p>
+<h2 id="7-uat">7. UAT 與上線後驗證</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>報表格式</th>
+<th>成品序號(起)</th>
+<th>成品序號(迄)</th>
+<th>預期結果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>成品</td>
+<td>空</td>
+<td>空</td>
+<td>與修改前相同</td>
+</tr>
+<tr>
+<td>2</td>
+<td>成品</td>
+<td>1</td>
+<td>10</td>
+<td>只列出成品序號 1–10</td>
+</tr>
+<tr>
+<td>3</td>
+<td>成品</td>
+<td>5</td>
+<td>空</td>
+<td>只列出成品序號 ≥ 5</td>
+</tr>
+<tr>
+<td>4</td>
+<td>料件</td>
+<td>空</td>
+<td>空</td>
+<td>與修改前相同</td>
+</tr>
+<tr>
+<td>5</td>
+<td>料件</td>
+<td>2</td>
+<td>2</td>
+<td>只列出成品序號 2 的料件</td>
+</tr>
+<tr>
+<td>6</td>
+<td>料件</td>
+<td>1</td>
+<td>10</td>
+<td>包含成品序號 10 的料件（確認不是文字排序）</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="8-rollback-plan">8. Rollback Plan</h2>
+<ol>
+<li>用步驟 1 的備份重新編譯 <code>GCCEX053_PKG</code> 的 spec 與 body。</li>
+<li>在 Concurrent Program 刪除或停用兩個新參數。</li>
+<li>用修改前的參數送出報表，確認可以正常執行。</li>
+</ol>
+<h2 id="9">9. 常見問題與維運排查</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>現象</th>
+<th>可能原因</th>
+<th>排查</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>送出報表時發生 <code>PLS-00306</code></td>
+<td>參數數量或順序和 Package 不一致</td>
+<td>核對 Concurrent Program 參數 Seq</td>
+</tr>
+<tr>
+<td>料件報表少了部分資料</td>
+<td><code>FG_EMS_G_NO</code> 有非數字值</td>
+<td>執行附錄 10.3</td>
+</tr>
+<tr>
+<td>報表沒有任何資料</td>
+<td>序號(起) 大於 序號(迄)</td>
+<td>檢查輸入值</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="10-sql-scripts">10. 附錄：SQL Scripts</h2>
+<h3 id="101">10.1 備份現有原始碼（唯讀）</h3>
+<div class="code"><button class="copy" type="button">複製</button><pre><code class="language-sql">SELECT TYPE, LINE, TEXT
+  FROM ALL_SOURCE
+ WHERE OWNER = 'APPS' AND NAME = 'GCCEX053_PKG'
+ ORDER BY TYPE, LINE;
+</code></pre></div>
+<h3 id="102">10.2 確認編譯狀態（唯讀）</h3>
+<div class="code"><button class="copy" type="button">複製</button><pre><code class="language-sql">SELECT OBJECT_NAME, OBJECT_TYPE, STATUS
+  FROM ALL_OBJECTS
+ WHERE OWNER = 'APPS' AND OBJECT_NAME = 'GCCEX053_PKG';
+</code></pre></div>
+<h3 id="103-fg_ems_g_no">10.3 查 FG_EMS_G_NO 非數字資料（唯讀）</h3>
+<div class="code"><button class="copy" type="button">複製</button><pre><code class="language-sql">SELECT FG_EMS_G_NO, COUNT(*)
+  FROM FL_GCC_HZ_IMG_ITEM
+ WHERE NOT REGEXP_LIKE(TRIM(FG_EMS_G_NO), '^[0-9]+$')
+    OR FG_EMS_G_NO IS NULL
+ GROUP BY FG_EMS_G_NO;
+</code></pre></div></main></div><script>
+document.querySelectorAll('.copy').forEach(function(b){b.addEventListener('click',function(){
+var t=b.parentNode.querySelector('code').innerText;
+var done=function(){b.textContent='已複製';setTimeout(function(){b.textContent='複製'},1500)};
+if(navigator.clipboard){navigator.clipboard.writeText(t).then(done,function(){})}});});
+</script></body></html>
