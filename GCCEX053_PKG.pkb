@@ -8,7 +8,9 @@ IS
        P_CONTRACT_NO_E  VARCHAR2, --合同號
        P_FG_ITEM_ID     NUMBER,  --成品ID
        P_ITEM_ID        NUMBER,  --料件ID
-       P_G_MARK         VARCHAR2  --成品或料件
+       P_G_MARK         VARCHAR2, --成品或料件
+       P_FG_EMS_G_NO_S  NUMBER,   --成品序號(起) 2026/10/06 add
+       P_FG_EMS_G_NO_E  NUMBER    --成品序號(迄) 2026/10/06 add
    )
 
 
@@ -71,6 +73,8 @@ IS
         AND FHE.imp_contract_no = NVL(P_IMP_CONTRACT_NO, FHE.imp_contract_no)
        -- AND FHE.IMP_CONTRACT_NO <= NVL(P_CONTRACT_NO_E, FHE.IMP_CONTRACT_NO)
         AND FHE.INVENTORY_ITEM_ID=NVL(P_FG_ITEM_ID, FHE.INVENTORY_ITEM_ID) 
+        AND (P_FG_EMS_G_NO_S IS NULL OR FHE.EMS_G_NO >= P_FG_EMS_G_NO_S) --成品序號(起) 2026/10/06 add
+        AND (P_FG_EMS_G_NO_E IS NULL OR FHE.EMS_G_NO <= P_FG_EMS_G_NO_E) --成品序號(迄) 2026/10/06 add
         order by FHE.imp_contract_no;
        
        
@@ -116,6 +120,8 @@ IS
         WHERE FHI.COP_EMS_NO= NVL(P_COP_EMS_NO, FHI.COP_EMS_NO)
         AND FHI.imp_contract_no= NVL(P_IMP_CONTRACT_NO, FHI.imp_contract_no)      
         AND FHI.INVENTORY_ITEM_ID=NVL(P_ITEM_ID, FHI.INVENTORY_ITEM_ID)
+        AND (P_FG_EMS_G_NO_S IS NULL OR FHI.FG_EMS_G_NO >= P_FG_EMS_G_NO_S) --成品序號(起) 2026/10/06 add
+        AND (P_FG_EMS_G_NO_E IS NULL OR FHI.FG_EMS_G_NO <= P_FG_EMS_G_NO_E) --成品序號(迄) 2026/10/06 add
         order by FHI.imp_contract_no;
        /* group   BY FHI.IMP_CONTRACT_NO,
           FHI.COP_EMS_NO,
